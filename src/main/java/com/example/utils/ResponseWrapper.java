@@ -27,5 +27,5 @@ public class ResponseWrapper<T> implements Serializable {
     private int size;
     private long totalElements;
     private long totalPages;
-    private long timestamp;
+    private String timestamp;
 }

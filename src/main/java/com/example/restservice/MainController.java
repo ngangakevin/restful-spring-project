@@ -1,19 +1,20 @@
 package com.example.restservice;
 
 import com.example.dbmodels.User;
+import com.example.dtos.CreateUserDTO;
 import com.example.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import com.example.utils.AppLogger;
 import com.example.utils.GlobalExceptionHandler;
 import com.example.utils.ResponseWrapper;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.Instant;
 
 @RestController
 @RequestMapping("/users")
@@ -28,33 +29,27 @@ public class MainController {
     @PostMapping(path="/add")
     public ResponseEntity<?> addNewUser (
             HttpServletRequest request,
-            @RequestParam String name,
-            @RequestParam String email,
-            @RequestParam String phone) {
-        User user = new User();
-        user.setName(name);
-        user.setEmail(email);
-        user.setPhone(phone);
+            @RequestBody CreateUserDTO createUserDTO) {
+        User user = User.fromDTO(createUserDTO);
         try {
             userRepository.save(user);
         }catch(Exception e){
             log.error(MainController.class.getName() ,e.getMessage(), "testID", e);
             System.out.println("\n\n" + request.toString());
             return exceptionHandler.handleAllExceptions(request, e);
-
         }
         log.info("User Created successfully");
-        ResponseWrapper<User> response =  new ResponseWrapper<>(
-                HttpStatus.CREATED.value(),
-                "Request accepted Successfully",
-                null,
-                0,
-                0,
-                1,
-                0,
-                System.currentTimeMillis()
-        );
-        return new ResponseEntity<>("response", HttpStatus.OK);
+        ResponseWrapper<User> response = ResponseWrapper.<User>builder()
+                .data(null)
+                .size(0)
+                .page(1)
+                .responseCode(HttpStatus.CREATED.value())
+                .message("Request accepted Successfully")
+                .totalElements(0)
+                .totalPages(0)
+                .timestamp(Instant.now().toString())
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping(path="/all")
@@ -79,7 +74,7 @@ public class MainController {
                 .size(users.getSize())
                 .totalElements(users.getTotalElements())
                 .totalPages(users.getTotalPages())
-                .timestamp(System.currentTimeMillis())
+                .timestamp(Instant.now().toString())
                 .build();
 
         return new ResponseEntity<>(response, HttpStatus.OK);
